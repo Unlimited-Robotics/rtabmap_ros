@@ -235,12 +235,22 @@ void rgbdImageToROS(const rtabmap::SensorData & data, rtabmap_ros::msg::RGBDImag
 	else
 	{
 		//stereo
-		rtabmap_ros::cameraModelToROS(data.stereoCameraModel().left(), msg.rgb_camera_info);
-		rtabmap_ros::cameraModelToROS(data.stereoCameraModel().right(), msg.depth_camera_info);
+		rtabmap_ros::cameraModelToROS(data.stereoCameraModels().front().left(), msg.rgb_camera_info);
+		rtabmap_ros::cameraModelToROS(data.stereoCameraModels().front().right(), msg.depth_camera_info);
 		msg.rgb_camera_info.header = header;
 		msg.depth_camera_info.header = header;
-		localTransform = data.stereoCameraModel().localTransform();
+		localTransform = data.stereoCameraModels().front().localTransform();
 	}
+
+	// else
+	// {
+	// 	//stereo
+	// 	rtabmap_ros::cameraModelToROS(data.stereoCameraModel().left(), msg.rgb_camera_info);
+	// 	rtabmap_ros::cameraModelToROS(data.stereoCameraModel().right(), msg.depth_camera_info);
+	// 	msg.rgb_camera_info.header = header;
+	// 	msg.depth_camera_info.header = header;
+	// 	localTransform = data.stereoCameraModel().localTransform();
+	// }
 
 	if(!data.imageRaw().empty())
 	{
@@ -1264,18 +1274,37 @@ void nodeDataToROS(const rtabmap::Signature & signature, rtabmap_ros::msg::NodeD
 			transformToGeometryMsg(signature.sensorData().cameraModels()[i].localTransform(), msg.local_transform[i]);
 		}
 	}
-	else if(signature.sensorData().stereoCameraModel().isValidForProjection())
+	else
 	{
-		msg.fx.push_back(signature.sensorData().stereoCameraModel().left().fx());
-		msg.fy.push_back(signature.sensorData().stereoCameraModel().left().fy());
-		msg.cx.push_back(signature.sensorData().stereoCameraModel().left().cx());
-		msg.cy.push_back(signature.sensorData().stereoCameraModel().left().cy());
-		msg.width.push_back(signature.sensorData().stereoCameraModel().left().imageWidth());
-		msg.height.push_back(signature.sensorData().stereoCameraModel().left().imageHeight());
-		msg.baseline = signature.sensorData().stereoCameraModel().baseline();
-		msg.local_transform.resize(1);
-		transformToGeometryMsg(signature.sensorData().stereoCameraModel().left().localTransform(), msg.local_transform[0]);
+		for(unsigned int i=0; i<signature.sensorData().stereoCameraModels().size(); ++i)
+		{
+			if(signature.sensorData().stereoCameraModels()[i].isValidForProjection())
+			{
+				msg.fx.push_back(signature.sensorData().stereoCameraModels()[i].left().fx());
+				msg.fy.push_back(signature.sensorData().stereoCameraModels()[i].left().fy());
+				msg.cx.push_back(signature.sensorData().stereoCameraModels()[i].left().cx());
+				msg.cy.push_back(signature.sensorData().stereoCameraModels()[i].left().cy());
+				msg.width.push_back(signature.sensorData().stereoCameraModels()[i].left().imageWidth());
+				msg.height.push_back(signature.sensorData().stereoCameraModels()[i].left().imageHeight());
+				msg.baseline = signature.sensorData().stereoCameraModels()[i].baseline();
+				msg.local_transform.resize(1);
+				transformToGeometryMsg(signature.sensorData().stereoCameraModels()[i].left().localTransform(), msg.local_transform[0]);
+			}
+		}
 	}
+
+	// else if(signature.sensorData().stereoCameraModel().isValidForProjection())
+	// {
+	// 	msg.fx.push_back(signature.sensorData().stereoCameraModel().left().fx());
+	// 	msg.fy.push_back(signature.sensorData().stereoCameraModel().left().fy());
+	// 	msg.cx.push_back(signature.sensorData().stereoCameraModel().left().cx());
+	// 	msg.cy.push_back(signature.sensorData().stereoCameraModel().left().cy());
+	// 	msg.width.push_back(signature.sensorData().stereoCameraModel().left().imageWidth());
+	// 	msg.height.push_back(signature.sensorData().stereoCameraModel().left().imageHeight());
+	// 	msg.baseline = signature.sensorData().stereoCameraModel().baseline();
+	// 	msg.local_transform.resize(1);
+	// 	transformToGeometryMsg(signature.sensorData().stereoCameraModel().left().localTransform(), msg.local_transform[0]);
+	// }
 
 	//Features stuff...
 	if(!signature.getWordsKpts().empty() &&
@@ -1477,7 +1506,9 @@ rtabmap::OdometryInfo odomInfoFromROS(const rtabmap_ros::msg::OdomInfo & msg, bo
 	UASSERT(msg.local_bundle_models.size() == msg.local_bundle_poses.size());
 	for(size_t i=0; i<msg.local_bundle_ids.size(); ++i)
 	{
-		info.localBundleModels.insert(std::make_pair(msg.local_bundle_ids[i], cameraModelFromROS(msg.local_bundle_models[i], transformFromGeometryMsg(msg.local_bundle_model_transforms[i]))));
+		//info.localBundleModels.insert(std::make_pair(msg.local_bundle_ids[i], 
+		//						cameraModelFromROS(msg.local_bundle_models[i], 
+		//						transformFromGeometryMsg(msg.local_bundle_model_transforms[i]))));
 		info.localBundlePoses.insert(std::make_pair(msg.local_bundle_ids[i], transformFromPoseMsg(msg.local_bundle_poses[i])));
 	}
 	info.keyFrameAdded = msg.key_frame_added;
@@ -1548,16 +1579,16 @@ void odomInfoToROS(const rtabmap::OdometryInfo & info, rtabmap_ros::msg::OdomInf
 	msg.local_bundle_constraints = info.localBundleConstraints;
 	msg.local_bundle_time = info.localBundleTime;
 	UASSERT(info.localBundleModels.size() == info.localBundlePoses.size());
-	for(std::map<int, rtabmap::CameraModel>::const_iterator iter=info.localBundleModels.begin();
-		iter!=info.localBundleModels.end();
+	for(auto iter=info.localBundleModels.begin();
+		iter != info.localBundleModels.end();
 		++iter)
 	{
 		msg.local_bundle_ids.push_back(iter->first);
 		sensor_msgs::msg::CameraInfo camInfo;
-		cameraModelToROS(iter->second, camInfo);
+		//cameraModelToROS(iter->second, camInfo);
 		msg.local_bundle_models.push_back(camInfo);
 		geometry_msgs::msg::Transform localT;
-		transformToGeometryMsg(iter->second.localTransform(), localT);
+		//transformToGeometryMsg(iter->second.localTransform(), localT);
 		msg.local_bundle_model_transforms.push_back(localT);
 		UASSERT(info.localBundlePoses.find(iter->first)!=info.localBundlePoses.end());
 		geometry_msgs::msg::Pose pose;
