@@ -1,0 +1,8 @@
+bool      enable
+float32   marker_lenght
+int32     marker_dictionary
+float32   marker_max_range
+int32     marker_corner_refinement_method
+---
+bool     success
+string   error_msg

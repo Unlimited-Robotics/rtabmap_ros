@@ -61,6 +61,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "rtabmap_msgs/srv/set_goal.hpp"
 #include "rtabmap_msgs/srv/set_label.hpp"
 #include "rtabmap_msgs/srv/remove_label.hpp"
+#include "rtabmap_msgs/srv/set_markers_detection.hpp"
+#include "rtabmap_msgs/srv/set_float32_parameter.hpp"
 #include "rtabmap_msgs/msg/goal.hpp"
 #include "rtabmap_msgs/srv/get_plan.hpp"
 #include "rtabmap_sync/CommonDataSubscriber.h"
@@ -216,10 +218,12 @@ private:
 	void cleanupLocalGridsCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<rtabmap_msgs::srv::CleanupLocalGrids::Request>, std::shared_ptr<rtabmap_msgs::srv::CleanupLocalGrids::Response>);
 	void setModeLocalizationCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
 	// Custom
-	void enableMarkersDetectionCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
-	void disableMarkersDetectionCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
-	void enableOptimizeMaxErrorCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
-	void disableOptimizeMaxErrorCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
+	// void enableMarkersDetectionCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
+	// void disableMarkersDetectionCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
+	// void enableOptimizeMaxErrorCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
+	// void disableOptimizeMaxErrorCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
+	void setMarkersDetectionCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<rtabmap_msgs::srv::SetMarkersDetection::Request>, std::shared_ptr<rtabmap_msgs::srv::SetMarkersDetection::Response>);
+	void setOptimizeMaxErrorCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<rtabmap_msgs::srv::SetFloat32Parameter::Request>, std::shared_ptr<rtabmap_msgs::srv::SetFloat32Parameter::Response>);
 	// !Custom
 	void setModeMappingCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
 	void setLogDebug(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
@@ -357,10 +361,12 @@ private:
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr setModeLocalizationSrv_;
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr setModeMappingSrv_;
 	// Custom
-	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr enableMarkersDetectionSrv_;
-	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr disableMarkersDetectionSrv_;
-	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr enableOptimizeMaxErrorSrv_;
-	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr disableOptimizeMaxErrorSrv_;
+	// rclcpp::Service<std_srvs::srv::Empty>::SharedPtr enableMarkersDetectionSrv_;
+	// rclcpp::Service<std_srvs::srv::Empty>::SharedPtr disableMarkersDetectionSrv_;
+	// rclcpp::Service<std_srvs::srv::Empty>::SharedPtr enableOptimizeMaxErrorSrv_;
+	// rclcpp::Service<std_srvs::srv::Empty>::SharedPtr disableOptimizeMaxErrorSrv_;
+	rclcpp::Service<rtabmap_msgs::srv::SetMarkersDetection>::SharedPtr setMarkersDetectionSrv_;
+	rclcpp::Service<rtabmap_msgs::srv::SetFloat32Parameter>::SharedPtr setOptimizeMaxErrorSrv_;
 	// !Custom
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr setLogDebugSrv_;
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr setLogInfoSrv_;

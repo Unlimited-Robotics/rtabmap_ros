@@ -644,10 +644,12 @@ CoreWrapper::CoreWrapper(const rclcpp::NodeOptions & options) :
 	setModeLocalizationSrv_ = this->create_service<std_srvs::srv::Empty>("set_mode_localization", std::bind(&CoreWrapper::setModeLocalizationCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	setModeMappingSrv_ = this->create_service<std_srvs::srv::Empty>("set_mode_mapping", std::bind(&CoreWrapper::setModeMappingCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	// Custom
-	enableMarkersDetectionSrv_ = this->create_service<std_srvs::srv::Empty>("enable_markers_detection", std::bind(&CoreWrapper::enableMarkersDetectionCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-	disableMarkersDetectionSrv_ = this->create_service<std_srvs::srv::Empty>("disable_markers_detection", std::bind(&CoreWrapper::disableMarkersDetectionCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-	enableOptimizeMaxErrorSrv_ = this->create_service<std_srvs::srv::Empty>("enable_optimize_max_error", std::bind(&CoreWrapper::enableOptimizeMaxErrorCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-	disableOptimizeMaxErrorSrv_ = this->create_service<std_srvs::srv::Empty>("disable_optimize_max_error", std::bind(&CoreWrapper::disableOptimizeMaxErrorCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	// enableMarkersDetectionSrv_ = this->create_service<std_srvs::srv::Empty>("enable_markers_detection", std::bind(&CoreWrapper::enableMarkersDetectionCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	// disableMarkersDetectionSrv_ = this->create_service<std_srvs::srv::Empty>("disable_markers_detection", std::bind(&CoreWrapper::disableMarkersDetectionCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	// enableOptimizeMaxErrorSrv_ = this->create_service<std_srvs::srv::Empty>("enable_optimize_max_error", std::bind(&CoreWrapper::enableOptimizeMaxErrorCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	// disableOptimizeMaxErrorSrv_ = this->create_service<std_srvs::srv::Empty>("disable_optimize_max_error", std::bind(&CoreWrapper::disableOptimizeMaxErrorCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	setMarkersDetectionSrv_ = this->create_service<rtabmap_msgs::srv::SetMarkersDetection>("set_markers_detection", std::bind(&CoreWrapper::setMarkersDetectionCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
+	setOptimizeMaxErrorSrv_ = this->create_service<rtabmap_msgs::srv::SetFloat32Parameter>("set_optimize_max_error", std::bind(&CoreWrapper::setOptimizeMaxErrorCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	// !Custom
 	getNodeDataSrv_ = this->create_service<rtabmap_msgs::srv::GetNodeData>("get_node_data", std::bind(&CoreWrapper::getNodeDataCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	getMapDataSrv_ = this->create_service<rtabmap_msgs::srv::GetMap>("get_map_data", std::bind(&CoreWrapper::getMapDataCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
@@ -2292,6 +2294,13 @@ void CoreWrapper::process(
 		rtabmapROSStats_.insert(std::make_pair(std::string("RtabmapROS/TimeUpdatingMaps/ms"), timeUpdateMaps*1000.0f));
 		rtabmapROSStats_.insert(std::make_pair(std::string("RtabmapROS/TimePublishing/ms"), timePublishMaps*1000.0f));
 		rtabmapROSStats_.insert(std::make_pair(std::string("RtabmapROS/TimeTotal/ms"), (timeMsgConversion+timeRtabmap+timeUpdateMaps+timePublishMaps)*1000.0f));
+
+
+		RCLCPP_WARN(this->get_logger(), "Optimization Max Error: %f", rtabmap_.getOptimizationMaxError());
+		if(rtabmap_.isDetectingMarkers()){
+			RCLCPP_WARN(this->get_logger(), "Detected tags: %d", rtabmap_.getDetectedMarkers());
+			RCLCPP_WARN(this->get_logger(), "Accepted tags: %d", rtabmap_.getAcceptedMarkers());
+		}
 	}
 	else if(!rtabmap_.isIDsGenerated())
 	{
@@ -3260,77 +3269,139 @@ void CoreWrapper::setModeMappingCallback(
 	RCLCPP_INFO(this->get_logger(), "rtabmap: Mapping mode enabled!");
 }
 
-void CoreWrapper::enableMarkersDetectionCallback(
+// Custom
+
+// void CoreWrapper::enableMarkersDetectionCallback(
+// 		const std::shared_ptr<rmw_request_id_t>,
+// 		const std::shared_ptr<std_srvs::srv::Empty::Request>,
+// 		std::shared_ptr<std_srvs::srv::Empty::Response>)
+// {
+// 	RCLCPP_INFO(this->get_logger(), "rtabmap: Enabling markers detection");
+// 	rtabmap::ParametersMap parameters;
+// 	// RGBD/MarkerDetection
+// 	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDMarkerDetection(), "true"));
+// 	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDMarkerDetection(), "true"));
+// 	// Marker/Length
+// 	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerLength(), "0.08"));
+// 	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerLength(), "0.08"));
+// 	// Marker/Dictionary
+// 	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerDictionary(), "19"));
+// 	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerDictionary(), "19"));
+// 	// Marker/MaxRange
+// 	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerMaxRange(), "3.5"));
+// 	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerMaxRange(), "3.5"));
+// 	// Marker/CornerRefinementMethod
+// 	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerCornerRefinementMethod(), "3"));
+// 	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerCornerRefinementMethod(), "3"));
+// 	//
+// 	rtabmap_.parseParameters(parameters);
+// 	RCLCPP_INFO(this->get_logger(), "rtabmap: Markers detection enabled!");
+// }
+
+// void CoreWrapper::disableMarkersDetectionCallback(
+// 		const std::shared_ptr<rmw_request_id_t>,
+// 		const std::shared_ptr<std_srvs::srv::Empty::Request>,
+// 		std::shared_ptr<std_srvs::srv::Empty::Response>)
+// {
+// 	RCLCPP_INFO(this->get_logger(), "rtabmap: Disabling markers detection");
+// 	rtabmap::ParametersMap parameters;
+// 	// RGBD/MarkerDetection
+// 	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDMarkerDetection(), "false"));
+// 	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDMarkerDetection(), "false"));
+// 	//
+// 	rtabmap_.parseParameters(parameters);
+// 	RCLCPP_INFO(this->get_logger(), "rtabmap: Markers detection disabled!");
+// }
+
+// void CoreWrapper::enableOptimizeMaxErrorCallback(
+// 		const std::shared_ptr<rmw_request_id_t>,
+// 		const std::shared_ptr<std_srvs::srv::Empty::Request>,
+// 		std::shared_ptr<std_srvs::srv::Empty::Response>)
+// {
+// 	RCLCPP_INFO(this->get_logger(), "rtabmap: Enabling optimize max error");
+// 	rtabmap::ParametersMap parameters;
+// 	// RGBD/MarkerDetection
+// 	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDOptimizeMaxError(), "3.0"));
+// 	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDOptimizeMaxError(), "3.0"));
+// 	//
+// 	rtabmap_.parseParameters(parameters);
+// 	RCLCPP_INFO(this->get_logger(), "rtabmap: Optimize max error enabled!");
+// }
+
+// void CoreWrapper::disableOptimizeMaxErrorCallback(
+// 		const std::shared_ptr<rmw_request_id_t>,
+// 		const std::shared_ptr<std_srvs::srv::Empty::Request>,
+// 		std::shared_ptr<std_srvs::srv::Empty::Response>)
+// {
+// 	RCLCPP_INFO(this->get_logger(), "rtabmap: Disabling optimize max error");
+// 	rtabmap::ParametersMap parameters;
+// 	// RGBD/MarkerDetection
+// 	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDOptimizeMaxError(), "0.0"));
+// 	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDOptimizeMaxError(), "0.0"));
+// 	//
+// 	rtabmap_.parseParameters(parameters);
+// 	RCLCPP_INFO(this->get_logger(), "rtabmap: Optimize max error disabled!");
+// }
+
+void CoreWrapper::setMarkersDetectionCallback(
 		const std::shared_ptr<rmw_request_id_t>,
-		const std::shared_ptr<std_srvs::srv::Empty::Request>,
-		std::shared_ptr<std_srvs::srv::Empty::Response>)
+		const std::shared_ptr<rtabmap_msgs::srv::SetMarkersDetection::Request> request,
+		std::shared_ptr<rtabmap_msgs::srv::SetMarkersDetection::Response> response
+	)
 {
-	RCLCPP_INFO(this->get_logger(), "rtabmap: Enabling markers detection");
 	rtabmap::ParametersMap parameters;
-	// RGBD/MarkerDetection
-	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDMarkerDetection(), "true"));
-	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDMarkerDetection(), "true"));
-	// Marker/Length
-	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerLength(), "0.08"));
-	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerLength(), "0.08"));
-	// Marker/Dictionary
-	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerDictionary(), "19"));
-	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerDictionary(), "19"));
-	// Marker/MaxRange
-	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerMaxRange(), "3.5"));
-	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerMaxRange(), "3.5"));
-	// Marker/CornerRefinementMethod
-	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerCornerRefinementMethod(), "3"));
-	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerCornerRefinementMethod(), "3"));
-	//
+	if(request->enable){
+		RCLCPP_INFO(this->get_logger(), "rtabmap: Enabling markers detection");
+		RCLCPP_INFO(this->get_logger(), "__________ Marker/Length: %f", request->marker_lenght);
+		RCLCPP_INFO(this->get_logger(), "__________ Marker/Dictionary: %d", request->marker_dictionary);
+		RCLCPP_INFO(this->get_logger(), "__________ Marker/MaxRange: %f", request->marker_max_range);
+		RCLCPP_INFO(this->get_logger(), "__________ Marker/CornerRefinementMethod: %d", request->marker_corner_refinement_method);
+		// RGBD/MarkerDetection
+		parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDMarkerDetection(), "true"));
+		set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDMarkerDetection(), "true"));
+		// Marker/Length
+		parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerLength(), std::to_string(request->marker_lenght)));
+		set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerLength(), std::to_string(request->marker_lenght)));
+		// Marker/Dictionary
+		parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerDictionary(), std::to_string(request->marker_dictionary)));
+		set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerDictionary(), std::to_string(request->marker_dictionary)));
+		// Marker/MaxRange
+		parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerMaxRange(), std::to_string(request->marker_max_range)));
+		set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerMaxRange(), std::to_string(request->marker_max_range)));
+		// Marker/CornerRefinementMethod
+		parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kMarkerCornerRefinementMethod(), std::to_string(request->marker_corner_refinement_method)));
+		set_parameter(rclcpp::Parameter(rtabmap::Parameters::kMarkerCornerRefinementMethod(), std::to_string(request->marker_corner_refinement_method)));
+	}else{
+		RCLCPP_INFO(this->get_logger(), "rtabmap: Disabling markers detection");
+		// RGBD/MarkerDetection
+		parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDMarkerDetection(), "false"));
+		set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDMarkerDetection(), "false"));
+	}
 	rtabmap_.parseParameters(parameters);
-	RCLCPP_INFO(this->get_logger(), "rtabmap: Markers detection enabled!");
+	if(request->enable)
+		RCLCPP_INFO(this->get_logger(), "rtabmap: Markers detection enabled!");
+	else
+		RCLCPP_INFO(this->get_logger(), "rtabmap: Markers detection disabled!");
+	response->success = true;
+	response->error_msg = "";
 }
 
-void CoreWrapper::disableMarkersDetectionCallback(
+void CoreWrapper::setOptimizeMaxErrorCallback(
 		const std::shared_ptr<rmw_request_id_t>,
-		const std::shared_ptr<std_srvs::srv::Empty::Request>,
-		std::shared_ptr<std_srvs::srv::Empty::Response>)
+		const std::shared_ptr<rtabmap_msgs::srv::SetFloat32Parameter::Request> request,
+		std::shared_ptr<rtabmap_msgs::srv::SetFloat32Parameter::Response> response)
 {
-	RCLCPP_INFO(this->get_logger(), "rtabmap: Disabling markers detection");
+	RCLCPP_INFO(this->get_logger(), "rtabmap: Setting optimize max error to %f", request->data);
 	rtabmap::ParametersMap parameters;
-	// RGBD/MarkerDetection
-	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDMarkerDetection(), "false"));
-	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDMarkerDetection(), "false"));
-	//
+	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDOptimizeMaxError(), std::to_string(request->data)));
+	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDOptimizeMaxError(), std::to_string(request->data)));
 	rtabmap_.parseParameters(parameters);
-	RCLCPP_INFO(this->get_logger(), "rtabmap: Markers detection disabled!");
+	RCLCPP_INFO(this->get_logger(), "rtabmap: Optimize max error set to %f !", request->data);
+	response->success = true;
+	response->error_msg = "";
 }
 
-void CoreWrapper::enableOptimizeMaxErrorCallback(
-		const std::shared_ptr<rmw_request_id_t>,
-		const std::shared_ptr<std_srvs::srv::Empty::Request>,
-		std::shared_ptr<std_srvs::srv::Empty::Response>)
-{
-	RCLCPP_INFO(this->get_logger(), "rtabmap: Enabling optimize max error");
-	rtabmap::ParametersMap parameters;
-	// RGBD/MarkerDetection
-	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDOptimizeMaxError(), "3.0"));
-	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDOptimizeMaxError(), "3.0"));
-	//
-	rtabmap_.parseParameters(parameters);
-	RCLCPP_INFO(this->get_logger(), "rtabmap: Optimize max error enabled!");
-}
-
-void CoreWrapper::disableOptimizeMaxErrorCallback(
-		const std::shared_ptr<rmw_request_id_t>,
-		const std::shared_ptr<std_srvs::srv::Empty::Request>,
-		std::shared_ptr<std_srvs::srv::Empty::Response>)
-{
-	RCLCPP_INFO(this->get_logger(), "rtabmap: Disabling optimize max error");
-	rtabmap::ParametersMap parameters;
-	// RGBD/MarkerDetection
-	parameters.insert(rtabmap::ParametersPair(rtabmap::Parameters::kRGBDOptimizeMaxError(), "0.0"));
-	set_parameter(rclcpp::Parameter(rtabmap::Parameters::kRGBDOptimizeMaxError(), "0.0"));
-	//
-	rtabmap_.parseParameters(parameters);
-	RCLCPP_INFO(this->get_logger(), "rtabmap: Optimize max error disabled!");
-}
+// !Custom
 
 void CoreWrapper::setLogDebug(
 		const std::shared_ptr<rmw_request_id_t>,

@@ -60,6 +60,13 @@ set(srv_files
    "srv/DetectMoreLoopClosures.srv"
    "srv/GlobalBundleAdjustment.srv"
    "srv/CleanupLocalGrids.srv"
+   "srv/SetMarkersDetection.srv"
+   "srv/SetBooleanParameter.srv"
+   "srv/SetStringParameter.srv"
+   "srv/SetInt32Parameter.srv"
+   "srv/SetInt64Parameter.srv"
+   "srv/SetFloat32Parameter.srv"
+   "srv/SetFloat64Parameter.srv"
 )
 
 ## Generate messages and services

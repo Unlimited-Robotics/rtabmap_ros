@@ -456,7 +456,7 @@ void CommonDataSubscriber::depthOdomDataScanDescInfoCallback(
 #endif
 
 void CommonDataSubscriber::setupDepthCallbacks(
-		rclcpp::Node& node,
+		rclcpp::Node& node, 
 		bool subscribeOdom,
 #ifdef RTABMAP_SYNC_USER_DATA
 		bool subscribeUserData,
