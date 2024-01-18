@@ -215,6 +215,12 @@ private:
 	void globalBundleAdjustmentCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<rtabmap_msgs::srv::GlobalBundleAdjustment::Request>, std::shared_ptr<rtabmap_msgs::srv::GlobalBundleAdjustment::Response>);
 	void cleanupLocalGridsCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<rtabmap_msgs::srv::CleanupLocalGrids::Request>, std::shared_ptr<rtabmap_msgs::srv::CleanupLocalGrids::Response>);
 	void setModeLocalizationCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
+	// Custom
+	void enableMarkersDetectionCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
+	void disableMarkersDetectionCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
+	void enableOptimizeMaxErrorCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
+	void disableOptimizeMaxErrorCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
+	// !Custom
 	void setModeMappingCallback(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
 	void setLogDebug(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
 	void setLogInfo(const std::shared_ptr<rmw_request_id_t>, const std::shared_ptr<std_srvs::srv::Empty::Request>, std::shared_ptr<std_srvs::srv::Empty::Response>);
@@ -350,6 +356,12 @@ private:
 	rclcpp::Service<rtabmap_msgs::srv::CleanupLocalGrids>::SharedPtr cleanupLocalGridsSrv_;
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr setModeLocalizationSrv_;
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr setModeMappingSrv_;
+	// Custom
+	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr enableMarkersDetectionSrv_;
+	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr disableMarkersDetectionSrv_;
+	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr enableOptimizeMaxErrorSrv_;
+	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr disableOptimizeMaxErrorSrv_;
+	// !Custom
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr setLogDebugSrv_;
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr setLogInfoSrv_;
 	rclcpp::Service<std_srvs::srv::Empty>::SharedPtr setLogWarnSrv_;
