@@ -900,6 +900,8 @@ CoreWrapper::CoreWrapper(const rclcpp::NodeOptions & options) :
 
 	// Setup callback for changes to parameters.
 	parameterEventSub_ = parametersClient_->on_parameter_event(on_parameter_event_callback);
+
+	rtabmap_.setExternalRejectionCallback(std::bind(&CoreWrapper::localRejectionCallback, this, std::placeholders::_1));
 }
 
 CoreWrapper::~CoreWrapper()
@@ -1809,6 +1811,18 @@ void CoreWrapper::commonSensorDataCallback(
 			timerConversion.ticks());
 
 	covariance_ = cv::Mat();
+}
+
+bool CoreWrapper::localRejectionCallback(std::map<int, rtabmap::Transform>& poses){
+	RCLCPP_ERROR(this->get_logger(), "rtabmap: localRejectionCallback");
+	RCLCPP_ERROR(this->get_logger(), "rtabmap: number of poses: %d", (int)(poses.size()));
+	for (const auto& pose : poses) {
+		RCLCPP_ERROR(this->get_logger(), "Pose: %d", pose.fist);
+		RCLCPP_ERROR(this->get_logger(), "__ x: %f", pose.second.x());
+		RCLCPP_ERROR(this->get_logger(), "__ y: %f", pose.second.y());
+		RCLCPP_ERROR(this->get_logger(), "__ z: %f", pose.second.z());
+	}
+	return false;
 }
 
 void CoreWrapper::process(

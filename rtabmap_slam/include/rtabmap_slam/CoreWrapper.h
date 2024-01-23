@@ -267,6 +267,8 @@ private:
 	void publishGlobalPath(const rclcpp::Time & stamp);
 	void republishMaps();
 
+	bool localRejectionCallback(std::map<int, rtabmap::Transform>&);
+
 private:
 	rtabmap::Rtabmap rtabmap_;
 	bool paused_;
