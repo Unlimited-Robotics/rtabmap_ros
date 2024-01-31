@@ -77,6 +77,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "rtabmap_msgs/srv/global_bundle_adjustment.hpp"
 #include "rtabmap_msgs/srv/cleanup_local_grids.hpp"
 #include "rtabmap_msgs/srv/add_link.hpp"
+#include <apriltag_pose_msgs/msg/april_tag_detection_array.hpp>
 
 #include "rtabmap_util/MapsManager.h"
 
@@ -84,10 +85,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifdef WITH_OCTOMAP_MSGS
 #include <octomap_msgs/srv/get_octomap.hpp>
-#endif
-
-#ifdef WITH_APRILTAG_MSGS
-#include <apriltag_msgs/msg/april_tag_detection_array.hpp>
 #endif
 
 #include <nav2_msgs/action/navigate_to_pose.hpp>
@@ -170,9 +167,7 @@ private:
 	void gpsFixAsyncCallback(const sensor_msgs::msg::NavSatFix::SharedPtr gpsFixMsg);
 	void landmarkDetectionAsyncCallback(const rtabmap_msgs::msg::LandmarkDetection::SharedPtr landmarkDetection);
 	void landmarkDetectionsAsyncCallback(const rtabmap_msgs::msg::LandmarkDetections::SharedPtr landmarkDetections);
-#ifdef WITH_APRILTAG_MSGS
-	void tagDetectionsAsyncCallback(const apriltag_msgs::msg::AprilTagDetectionArray::SharedPtr tagDetections);
-#endif
+	void tagDetectionsAsyncCallback(const apriltag_pose_msgs::msg::AprilTagDetectionArray::SharedPtr tagDetections);
 #ifdef WITH_FIDUCIAL_MSGS
 	void fiducialDetectionsAsyncCallback(const fiducial_msgs::msgs::FiducialTransformArray::SharedPtr fiducialDetections);
 #endif
@@ -409,9 +404,7 @@ private:
 	rtabmap::GPS gps_;
 	rclcpp::Subscription<rtabmap_msgs::msg::LandmarkDetection>::SharedPtr landmarkDetectionSub_;
 	rclcpp::Subscription<rtabmap_msgs::msg::LandmarkDetections>::SharedPtr landmarkDetectionsSub_;
-#ifdef WITH_APRILTAG_MSGS
-	rclcpp::Subscription<apriltag_msgs::msg::AprilTagDetectionArray>::SharedPtr tagDetectionsSub_;
-#endif
+	rclcpp::Subscription<apriltag_pose_msgs::msg::AprilTagDetectionArray>::SharedPtr tagDetectionsSub_;
 #ifdef WITH_FIDUCIAL_MSGS
 	rclcpp::Subscription<fiducial_msgs::msg::FiducialTransformArray>::SharedPtr fiducialTransfromsSub_;
 #endif

@@ -34,7 +34,7 @@ ENDIF()
 
 #optional
 find_package(octomap_msgs)
-find_package(apriltag_msgs)
+find_package(apriltag_pose_msgs)
 
 IF(WIN32)
 add_compile_options(-bigobj)
@@ -61,6 +61,7 @@ SET(Libraries
    rtabmap_msgs
    rtabmap_util
    rtabmap_sync
+   apriltag_pose_msgs
 )
 
 ###########
@@ -80,16 +81,6 @@ SET(Libraries
    octomap_msgs
 )
 ENDIF(octomap_msgs_FOUND)
-
-# If apriltag_msgs is found, add definition
-IF(apriltag_msgs_FOUND)
-MESSAGE(STATUS "WITH apriltag_msgs")
-ADD_DEFINITIONS("-DWITH_APRILTAG_MSGS")
-SET(Libraries
-   ${Libraries}
-   apriltag_msgs
-)
-ENDIF(apriltag_msgs_FOUND)
 
 ############################
 ## Declare a cpp library

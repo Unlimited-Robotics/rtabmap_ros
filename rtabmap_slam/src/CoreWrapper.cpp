@@ -833,9 +833,7 @@ CoreWrapper::CoreWrapper(const rclcpp::NodeOptions & options) :
 	gpsFixAsyncSub_ = this->create_subscription<sensor_msgs::msg::NavSatFix>("gps/fix", rclcpp::QoS(5).reliability((rmw_qos_reliability_policy_t)qosGPS), std::bind(&CoreWrapper::gpsFixAsyncCallback, this, std::placeholders::_1));
 	landmarkDetectionSub_ = this->create_subscription<rtabmap_msgs::msg::LandmarkDetection>("landmark_detection", 5, std::bind(&CoreWrapper::landmarkDetectionAsyncCallback, this, std::placeholders::_1));
 	landmarkDetectionsSub_ = this->create_subscription<rtabmap_msgs::msg::LandmarkDetections>("landmark_detections", 5, std::bind(&CoreWrapper::landmarkDetectionsAsyncCallback, this, std::placeholders::_1));
-#ifdef WITH_APRILTAG_MSGS
-	tagDetectionsSub_ = this->create_subscription<apriltag_msgs::msg::AprilTagDetectionArray>("tag_detections", 5, std::bind(&CoreWrapper::tagDetectionsAsyncCallback, this, std::placeholders::_1));
-#endif
+	tagDetectionsSub_ = this->create_subscription<apriltag_pose_msgs::msg::AprilTagDetectionArray>("tag_detections", 5, std::bind(&CoreWrapper::tagDetectionsAsyncCallback, this, std::placeholders::_1));
 #ifdef WITH_FIDUCIAL_MSGS
 	fiducialTransfromsSub_ = this->create_subscription<fiducial_msgs::msg::FiducialTransformArray>("fiducial_transforms", 5, std::bind(&CoreWrapper::fiducialDetectionsAsyncCallback, this, std::placeholders::_1));
 #endif
@@ -2444,40 +2442,18 @@ void CoreWrapper::landmarkDetectionsAsyncCallback(const rtabmap_msgs::msg::Landm
 	}
 }
 
-#ifdef WITH_APRILTAG_MSGS
-void CoreWrapper::tagDetectionsAsyncCallback(const apriltag_msgs::msg::AprilTagDetectionArray::SharedPtr tagDetections)
+void CoreWrapper::tagDetectionsAsyncCallback(const apriltag_pose_msgs::msg::AprilTagDetectionArray::SharedPtr tagDetections)
 {
 	if(!paused_)
 	{
 		for(unsigned int i=0; i<tagDetections->detections.size(); ++i)
-		{
-			std::string tagFrameId = tagDetections->detections[i].family+":"+uNumber2Str(tagDetections->detections[i].id);
-			Transform camToTag = rtabmap_conversions::getTransform(
-				tagDetections->header.frame_id, // e.g., camera_optical_frame
-				tagFrameId,                     // e.g., tag36h11:42
-				tagDetections->header.stamp,
-				*tfBuffer_,
-				waitForTransform_);
-			if(camToTag.isNull())
-			{
-				RCLCPP_WARN(get_logger(), "Could not get TF between %s and %s frames for tag detection %d.",
-					frameId_.c_str(),
-					tagFrameId.c_str(),
-					tagDetections->detections[i].id);
-					continue;
-			}
-
-			geometry_msgs::msg::PoseWithCovarianceStamped p;
-			rtabmap_conversions::transformToPoseMsg(camToTag, p.pose.pose);
-			p.header = tagDetections->header;
-			
+		{	
 			uInsert(landmarks_,
 					std::make_pair(tagDetections->detections[i].id,
-							std::make_pair(p, 0.0f)));
+							std::make_pair(tagDetections->detections[i].pose, 0.0f)));
 		}
 	}
 }
-#endif
 
 #ifdef WITH_FIDUCIAL_MSGS
 void CoreWrapper::fiducialDetectionsAsyncCallback(const fiducial_msgs::msg::FiducialTransformArray::SharedPtr fiducialDetections)
